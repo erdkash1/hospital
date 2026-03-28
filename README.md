@@ -1,72 +1,41 @@
-# Hospital Management API
+# Community Skill Exchange API
 
-A secure, production-ready REST API for managing hospital operations built with Java Spring Boot. Features JWT authentication, role-based access control, and full CRUD operations for departments, doctors, patients, and appointments.
+A RESTful API that connects people who want to share skills with those who want to learn them. No money involved — just community members helping each other for free.
 
-## Live URL
-https://hospital-production-db4b.up.railway.app
+## Live Demo
+
+Base URL: `https://skill-exchange-production.up.railway.app`
 
 ## Tech Stack
-- Java 21
-- Spring Boot 3.5.11
-- Spring Security + JWT Authentication
-- Spring Data JPA + Hibernate
-- PostgreSQL
-- Maven
-- Deployed on Railway
 
-## Features
-- JWT secured endpoints
-- Role based access (PATIENT, DOCTOR, ADMIN)
-- Department management
-- Doctor profiles linked to departments
-- Patient registration and management
-- Appointment scheduling between patients and doctors
+- **Java 21**
+- **Spring Boot 3.5**
+- **Spring Security + JWT** for authentication
+- **Spring Data JPA + Hibernate** for database access
+- **PostgreSQL** for the database
+- **Maven** for dependency management
+- **Deployed on Railway**
 
-## API Endpoints
+## How It Works
 
-### Auth (public)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /auth/register | Register a new user |
-| POST | /auth/login | Login and receive JWT token |
+1. Register as a MEMBER
+2. Browse available skills by category
+3. Post a skill offer — "I can teach Guitar"
+4. Post a skill request — "I want to learn Guitar"
+5. When matched, request status updates to MATCHED
+6. Community members help each other for free
 
-### Departments (requires JWT)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /departments | Get all departments |
-| GET | /departments/{id} | Get department by id |
-| POST | /departments | Create a department |
-| PUT | /departments/{id} | Update a department |
-| DELETE | /departments/{id} | Delete a department |
+## Project Structure
+```
+src/main/java/com/iggy/skillexchange/
+├── controller/       # REST API endpoints
+├── service/          # Business logic
+├── repository/       # Database access
+├── entity/           # JPA entities
+├── security/         # JWT and Spring Security config
+```
 
-### Doctors (requires JWT)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /doctors | Get all doctors |
-| GET | /doctors/{id} | Get doctor by id |
-| POST | /doctors | Create a doctor |
-| PUT | /doctors/{id} | Update a doctor |
-| DELETE | /doctors/{id} | Delete a doctor |
-
-### Patients (requires JWT)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /patients | Get all patients |
-| GET | /patients/{id} | Get patient by id |
-| POST | /patients | Create a patient |
-| PUT | /patients/{id} | Update a patient |
-| DELETE | /patients/{id} | Delete a patient |
-
-### Appointments (requires JWT)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /appointments | Get all appointments |
-| GET | /appointments/{id} | Get appointment by id |
-| POST | /appointments | Book an appointment |
-| PUT | /appointments/{id} | Update an appointment |
-| DELETE | /appointments/{id} | Cancel an appointment |
-
-## How to Run Locally
+## Getting Started
 
 ### Prerequisites
 - Java 21
@@ -74,37 +43,110 @@ https://hospital-production-db4b.up.railway.app
 - Maven
 
 ### Setup
+
 1. Clone the repository
+```bash
+git clone https://github.com/erdkash1/Skill-Exchange.git
+cd Skill-Exchange
 ```
-   git clone https://github.com/erdkash1/hospital.git
+
+2. Create a PostgreSQL database
+```sql
+CREATE DATABASE skillexchange_db;
 ```
-2. Create a PostgreSQL database called `hospital_db`
+
 3. Update `src/main/resources/application.properties`:
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/skillexchange_db
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+jwt.secret=your_base64_encoded_secret
+jwt.expiration=86400000
 ```
-   spring.datasource.url=jdbc:postgresql://localhost:5432/hospital_db
-   spring.datasource.username=postgres
-   spring.datasource.password=yourpassword
+
+4. Run the application
+```bash
+./mvnw spring-boot:run
 ```
-4. Run the application:
-```
-   mvn spring-boot:run
-```
+
+The API will start on `http://localhost:8080`
 
 ## Authentication
-All endpoints except `/auth/**` require a JWT token.
 
-1. Register a user at `POST /auth/register`
-2. Login at `POST /auth/login` to get your token
-3. Add the token to your requests:
-    - Header: `Authorization: Bearer your_token_here`
-    - Or use Postman's Auth tab → Bearer Token
+This API uses JWT authentication. To access protected endpoints:
 
-## Project Structure
+1. Register or login to get a token
+2. Add the token to the `Authorization` header of every request:
 ```
-src/main/java/com/iggy/hospital/
-├── entity/         # Database models
-├── repository/     # Data access layer
-├── service/        # Business logic
-├── controller/     # REST endpoints
-└── security/       # JWT authentication
+Authorization: Bearer your_token_here
+```
+
+## API Endpoints
+
+### Auth
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/register` | Register as a member | No |
+| POST | `/auth/login` | Login and get JWT token | No |
+
+### Skills
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/skills` | Browse all skills | Yes |
+| GET | `/skills/{id}` | Get skill by ID | Yes |
+| GET | `/skills/category/{category}` | Find skills by category | Yes |
+| POST | `/skills` | Create a skill | Yes |
+| DELETE | `/skills/{id}` | Delete a skill | Yes |
+
+### Skill Offers
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/offers` | See all offers | Yes |
+| GET | `/offers/{id}` | Get offer by ID | Yes |
+| POST | `/offers` | Post a skill you can teach | Yes |
+| DELETE | `/offers/{id}` | Remove your offer | Yes |
+
+### Skill Requests
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/requests` | See all requests | Yes |
+| GET | `/requests/{id}` | Get request by ID | Yes |
+| POST | `/requests` | Post a skill you want to learn | Yes |
+| PATCH | `/requests/{id}/status` | Update status (OPEN/MATCHED/CLOSED) | Yes |
+| DELETE | `/requests/{id}` | Remove your request | Yes |
+
+## Example Requests
+
+### Register
+**POST** `https://skill-exchange-production.up.railway.app/auth/register`
+```json
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123"
+}
+```
+
+### Post a Skill Offer
+**POST** `https://skill-exchange-production.up.railway.app/offers`
+```json
+{
+    "skillId": 1,
+    "description": "I can teach beginner guitar lessons online"
+}
+```
+
+### Post a Skill Request
+**POST** `https://skill-exchange-production.up.railway.app/requests`
+```json
+{
+    "skillId": 1,
+    "description": "Looking to learn basic guitar chords"
+}
+```
+
+## Author
+
+Erdenesuren Shirmen — Senior Computer Science Student
+GitHub: [@erdkash1](https://github.com/erdkash1)
 ```
